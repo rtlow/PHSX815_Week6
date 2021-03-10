@@ -1,2 +1,10 @@
-# PHSX815_Week6
-Monte Carlo Integration
+# PHSX815_Week5
+
+# Numerical integration
+
+We are integrating `exp(x)` using the trapezoidal method, the Gauss-Legendre method, and the Monte Carlo method.
+
+## Example Usage
+`generate_weights.nb` is a Mathematica notebook that can generate the Gauss-Legendre weights and abscissae. It is modified from code from https://pomax.github.io/bezierinfo/legendre-gauss.html.
+
+`NumericalIntegration.py` can be run from the command line. There are no additional commandline options. Compares the two methods of numerical integration with each other and with the analytical value.
