@@ -7,4 +7,4 @@ We are integrating `exp(x)` using the trapezoidal method, the Gauss-Legendre met
 ## Example Usage
 `generate_weights.nb` is a Mathematica notebook that can generate the Gauss-Legendre weights and abscissae. It is modified from code from https://pomax.github.io/bezierinfo/legendre-gauss.html.
 
-`NumericalIntegration.py` can be run from the command line. There are no additional commandline options. Compares the two methods of numerical integration with each other and with the analytical value.
+`NumericalIntegration.py` can be run from the command line with the `-h` flag to display runtime options. `-NmaxT` sets the maximum number of subdivisions for the trapezoidal method. `-NmaxM` sets the maximum number of samples for the Monte Carlo method. `-transform` applies a coordinate transformation to the function before doing Monte Carlo integration.

@@ -5,9 +5,21 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+sys.path.append('.')
+from python.Random import Random
+
 # just an exponential function
 def exp(x):
     return np.exp(x)
+
+# sample from a uniform distribution at y = 3
+def sampleFlat(a, b, random):
+
+    return a + (b - a) * random.rand()
+
+# a unit funciton
+def Unit(x):
+    return 1
 
 # trapezoidal rule
 def trap_method(f, a, b, n):
@@ -30,23 +42,70 @@ def gauss_legendre(f, xis, weights):
 
     return np.sum( weights * f(xis) )
 
+# Monte Carlo method
+def monte_carlo(f, a, b, n, random):
+    
+    # volume element
+    V = b - a
+    
+    samples = []
+
+    i = 1
+    
+    # take n samples
+    while i <= n:
+        
+        xi = sampleFlat(a, b, random)
+
+        samples.append(f(xi))
+
+        i += 1
+    
+    # here's the estimate
+    integral = (V/n) *  np.sum(samples)
+
+    return integral
+
 # main function
 if __name__ == "__main__":
     # if the user includes the flag -h or --help print the options
     if '-h' in sys.argv or '--help' in sys.argv:
-        print ("Usage: %s -Nmax [maximum number of trapezoidal subdivisions]" % sys.argv[0])
+        print ("Usage: %s -seed [Random Seed] -NmaxT [maximum number of trapezoidal subdivisions] -NmaxM [maximum number of Monte Carlo samples]" % sys.argv[0])
         print
         sys.exit(1)
     
-    Nmax = 50
+    NmaxT = 50
+
+    NmaxM = 50
 
     GLMax = 50
 
-    if '-Nmax' in sys.argv:
-        p = sys.argv.index('-Nmax')
+    seed = 5555
+
+    transform = False
+
+    if '-NmaxT' in sys.argv:
+        p = sys.argv.index('-NmaxT')
         Ne = int(sys.argv[p + 1])
         if Ne > 0:
-            Nmax = Ne
+            NmaxT = Ne
+
+    if '-NmaxM' in sys.argv:
+        p = sys.argv.index('-NmaxM')
+        Ne = int(sys.argv[p + 1])
+        if Ne > 0:
+            NmaxM = Ne
+
+    if '-seed' in sys.argv:
+        p = sys.argv.index('-seed')
+        Ne = int(sys.argv[p + 1])
+        if Ne > 0:
+            seed = Ne
+    
+    if '-transform' in sys.argv:
+        transform = True
+    random = Random(seed)
+
 
     # interval of [-1, 1] since the Gauss-Legendre method works over that interval
 
@@ -60,7 +119,7 @@ if __name__ == "__main__":
     
     n = 2
     # generating trapezoidal estimates
-    while n <= Nmax:
+    while n <= NmaxT:
         trap_ests.append(trap_method(exp, a, b, n))
         n += 1
     
@@ -82,21 +141,60 @@ if __name__ == "__main__":
     
     GL_ests = np.array(GL_ests)
     
+    MC_ests = []
+    
+    n = 2
+
+    # generating Monte Carlo estimates
+    while n <= NmaxM:
+        MC_ests.append(monte_carlo(exp, a, b, n, random))
+
+        n += 1
+
+    MC_ests = np.array(MC_ests)
+    
+
     # subtract the analytical result off
     trap_err = trap_ests - ana_result
     
     GL_err = GL_ests - ana_result
 
+    MC_err = MC_ests - ana_result
+
     # plotting
-    ntrap = np.arange(2, Nmax+1)
+    ntrap = np.arange(2, NmaxT+1)
     nGL = np.arange(2, GLMax+1)
+    nMC = np.arange(2, NmaxM+1)
     plt.figure(figsize=[12, 7])
 
-    plt.plot(ntrap, trap_err, 'ro', label='Trapezoidal estimate')
-    plt.plot(nGL, GL_err, 'bo', label='Gauss-Legendre estimate')
+    plt.plot(ntrap, trap_err, 'ro', label='Trapezoidal error')
+    plt.plot(nGL, GL_err, 'bo', label='Gauss-Legendre error')
+    plt.plot(nMC, MC_err, 'go', alpha=0.25, label='Monte Carlo error')
+    
+    if transform == True:
 
-    # we can do this since n is the same for both
-    plt.plot(ntrap, trap_ests - GL_ests, 'kd', label='Trapezoidal - Gauss-Legendre', alpha=0.75, markersize=5)
+        trans_ests = []
+
+        n = 2
+        
+        # transform by the logarithm
+        # doing this gives a flat region
+
+        while n <= NmaxM:
+
+            ap = exp(a)
+            bp = exp(b)
+            
+            trans_ests.append(monte_carlo(Unit, ap, bp, n, random))
+
+            n += 1
+        
+        trans_ests = np.array(trans_ests)
+
+        trans_err = trans_ests - ana_result
+
+        plt.plot(nMC, trans_err, 'yd', alpha=0.5, label='MC with Transformation')
+
 
     plt.xlabel('n')
     plt.ylabel('True value - Integral estimate')
